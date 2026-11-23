@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#167d69">
+<title>Meu Dinheiro</title>
+<style>
+:root{--green:#167d69;--bg:#f4f7f6;--ink:#152522;--muted:#71817c;--card:#fff;--line:#e4ebe8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:0 0 86px}
+header{background:var(--green);color:white;padding:24px 18px 22px;border-radius:0 0 25px 25px}
+header .top{display:flex;justify-content:space-between;align-items:center}header h1{font-size:20px;margin:0}header small{opacity:.85}
+#balance{font-size:34px;font-weight:750;margin:20px 0 5px}.subrow{display:flex;gap:24px}.subrow small{display:block;opacity:.8}.subrow b{font-size:16px}
+main{max-width:700px;margin:14px auto;padding:0 14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:0 2px 12px #183b3010}.stat small{color:var(--muted)}.stat b{display:block;font-size:21px;margin-top:5px}.income{color:#15945e}.expense{color:#c47a11}
+h2{font-size:16px;margin:0 0 14px}.monthrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0 12px}.monthrow input{max-width:170px}
+input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:inherit;margin:5px 0}button{border:0;border-radius:12px;background:var(--green);color:white;font:inherit;font-weight:650;padding:12px 14px;cursor:pointer}button.secondary{background:#e7f1ee;color:#176451}button.red{background:#b54343}button.small{padding:7px 10px;font-size:13px}
+form .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}form button{width:100%;margin-top:6px}
+#chart{display:block;width:100%;max-width:340px;height:260px;margin:auto}#legend{font-size:13px}.legendrow{margin:8px 0;display:flex;align-items:center;gap:8px}.swatch{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+.tx{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}.tx:last-child{border-bottom:0}.txname{font-weight:600}.txmeta{color:var(--muted);font-size:12px}.txright{text-align:right;white-space:nowrap}
+.budgetrow{margin:12px 0}.budgettitle{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}.bar{height:9px;background:#e8efec;border-radius:8px;overflow:hidden}.bar div{height:100%;background:var(--green);border-radius:8px}.bar div.over{background:#d05b47}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.actions button{flex:1;min-width:130px}.empty{color:var(--muted);text-align:center;padding:18px}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:9px 5px calc(9px + env(safe-area-inset-bottom));z-index:5}nav button{background:transparent;color:var(--muted);padding:8px;font-size:12px}nav button.active{color:var(--green)}
+section{scroll-margin-top:10px}.hide{display:none}.hint{font-size:12px;color:var(--muted);line-height:1.45}
+@media(min-width:600px){body{padding-bottom:20px}nav{position:static;border:0;max-width:700px;margin:auto;background:transparent}main{padding-bottom:25px}}
+</style>
+<link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"></head>
+<body>
+<header>
+<div class="top"><h1>💰 Meu Dinheiro</h1><small id="monthLabel"></small></div>
+<div style="opacity:.85;margin-top:14px">Saldo do mês</div><div id="balance">0,00 €</div>
+<div class="subrow"><div><small>Receitas</small><b id="headerIncome">0 €</b></div><div><small>Despesas</small><b id="headerExpense">0 €</b></div></div>
+</header>
+<main>
+<div class="monthrow"><label for="month"><strong>Mês</strong></label><input id="month" type="month"></div>
+<section id="overview">
+<div class="grid"><div class="card stat"><small>📥 Receitas</small><b class="income" id="incomeCard">0 €</b></div><div class="card stat"><small>📤 Despesas</small><b class="expense" id="expenseCard">0 €</b></div></div>
+<div class="card"><h2>Despesas por categoria</h2><canvas id="chart" width="340" height="260"></canvas><div id="legend"></div></div>
+<div class="card"><h2>Orçamento por categoria</h2><div id="budgets"></div><p class="hint">Define limites mensais nas categorias que queres controlar.</p></div>
+</section>
+<section id="addSection" class="hide">
+<div class="card"><h2>Adicionar movimento</h2><form id="form">
+<select id="type"><option value="expense">Despesa</option><option value="income">Receita</option></select>
+<input id="description" placeholder="Descrição (ex.: supermercado)" required>
+<div class="row"><select id="category"></select><input id="amount" type="number" step="0.01" min="0.01" placeholder="Valor (€)" required></div>
+<input id="date" type="date" required><button type="submit">Guardar movimento</button>
+</form></div>
+<div class="card"><h2>Definir orçamento</h2><form id="budgetForm"><div class="row"><select id="budgetCat"></select><input id="budgetAmount" type="number" min="0" step="0.01" placeholder="Limite (€)" required></div><button type="submit">Guardar orçamento</button></form></div>
+</section>
+<section id="transactions" class="hide"><div class="card"><h2>Movimentos do mês</h2><div id="list"></div></div></section>
+<section id="settings" class="hide"><div class="card"><h2>Dados e cópias de segurança</h2><div class="actions"><button id="export">Exportar cópia</button><button class="secondary" id="importBtn">Importar cópia</button><input class="hide" id="importFile" type="file" accept=".json,application/json"></div><p class="hint">Exporta um ficheiro de segurança para guardares os dados ou transferires para outro dispositivo. Os dados são guardados neste browser.</p><hr style="border:0;border-top:1px solid var(--line);margin:16px 0"><button class="red" id="wipe">Apagar todos os dados</button></div>
+<div class="card"><h2>Privacidade</h2><p class="hint">Esta aplicação guarda os movimentos no armazenamento local do browser deste dispositivo. Não envia os dados para um servidor. Limpar os dados do browser pode apagar os registos; exporta regularmente uma cópia.</p></div></section>
+</main>
+<nav><button class="active" data-target="overview">🏠<br>Resumo</button><button data-target="addSection">➕<br>Adicionar</button><button data-target="transactions">📋<br>Movimentos</button><button data-target="settings">⚙️<br>Dados</button></nav>
+<script>
+(()=>{
+const CATS=['Alimentação','Casa','Transportes','Combustível','Escola','Saúde','Comunicações','Restaurantes / Delivery','Lazer','Carro','Compras','Poupança','Outros'];
+const colors=['#3b82f6','#f59e0b','#10b981','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316','#64748b','#a3e635','#e879f9','#eab308','#94a3b8'];
+const KEY='meuDinheiroData_v1';
+let data={transactions:[],budgets:{}};
+try{data=JSON.parse(localStorage.getItem(KEY))||data}catch(e){}
+const $=id=>document.getElementById(id),fmt=n=>n.toLocaleString('pt-PT',{style:'currency',currency:'EUR'}),now=new Date(),monthNow=now.toISOString().slice(0,7);
+$('month').value=monthNow;$('date').value=now.toISOString().slice(0,10);
+function save(){localStorage.setItem(KEY,JSON.stringify(data))}
+function month(){return $('month').value||monthNow}
+function catsFill(){['category','budgetCat'].forEach(id=>$(id).innerHTML=CATS.map(c=>`<option>${c}</option>`).join(''))}
+function monthTx(){return data.transactions.filter(t=>t.date.slice(0,7)===month())}
+function render(){
+let tx=monthTx(),ins=tx.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0),outs=tx.filter(t=>t.type==='expense').reduce((a,t)=>a+t.amount,0);
+$('monthLabel').textContent=month();$('balance').textContent=fmt(ins-outs);$('headerIncome').textContent=fmt(ins);$('headerExpense').textContent=fmt(outs);$('incomeCard').textContent=fmt(ins);$('expenseCard').textContent=fmt(outs);
+draw(tx,outs);renderBudgets(tx);renderList(tx);
+}
+function draw(tx,total){
+let groups={};tx.filter(t=>t.type==='expense').forEach(t=>groups[t.category]=(groups[t.category]||0)+t.amount);
+let vals=Object.entries(groups),cv=$('chart'),ctx=cv.getContext('2d');ctx.clearRect(0,0,cv.width,cv.height);
+$('legend').innerHTML='';
+if(!vals.length){ctx.fillStyle='#71817c';ctx.font='15px system-ui';ctx.fillText('Sem despesas registadas neste mês',20,130);return}
+let angle=-Math.PI/2;vals.forEach((v,i)=>{let s=v[1]/total*2*Math.PI;ctx.beginPath();ctx.moveTo(170,130);ctx.arc(170,130,105,angle,angle+s);ctx.closePath();ctx.fillStyle=colors[i%colors.length];ctx.fill();angle+=s;
+let row=document.createElement('div');row.className='legendrow';row.innerHTML=`<span class="swatch" style="background:${colors[i%colors.length]}"></span><span>${v[0]} — ${fmt(v[1])} (${Math.round(v[1]/total*100)}%)</span>`;$('legend').appendChild(row);});
+}
+function renderBudgets(tx){
+let ex={};tx.filter(t=>t.type==='expense').forEach(t=>ex[t.category]=(ex[t.category]||0)+t.amount);
+let html='';let keys=Object.keys(data.budgets);
+if(!keys.length){$('budgets').innerHTML='<div class="empty">Ainda não definiste orçamentos.</div>';return}
+keys.forEach((c,i)=>{let lim=Number(data.budgets[c]||0),spent=ex[c]||0,p=lim?Math.min(100,spent/lim*100):0;html+=`<div class="budgetrow"><div class="budgettitle"><span>${c}</span><span>${fmt(spent)} / ${fmt(lim)}</span></div><div class="bar"><div class="${spent>lim?'over':''}" style="width:${p}%"></div></div>${spent>lim?'<small style="color:#d05b47">Limite ultrapassado</small>':''}</div>`});$('budgets').innerHTML=html;
+}
+function renderList(tx){
+let list=$('list');list.innerHTML='';if(!tx.length){list.innerHTML='<div class="empty">Sem movimentos neste mês.</div>';return}
+tx.slice().sort((a,b)=>b.date.localeCompare(a.date)).forEach(t=>{
+let el=document.createElement('div');el.className='tx';
+el.innerHTML=`<div><div class="txname">${escapeHTML(t.description)}</div><div class="txmeta">${t.category} · ${t.date}</div></div><div class="txright"><div style="color:${t.type==='income'?'#15945e':'#c47a11'}">${t.type==='income'?'+':'−'}${fmt(t.amount)}</div><button class="red small" data-id="${t.id}">Eliminar</button></div>`;
+list.appendChild(el)});
+list.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{data.transactions=data.transactions.filter(t=>t.id!==b.dataset.id);save();render()});
+}
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+$('form').addEventListener('submit',e=>{e.preventDefault();let amount=Number($('amount').value);if(!amount||amount<=0)return;data.transactions.push({id:crypto.randomUUID(),type:$('type').value,description:$('description').value.trim(),category:$('category').value,amount,date:$('date').value});save();$('description').value='';$('amount').value='';$('date').value=now.toISOString().slice(0,10);$('month').value=$('date').value.slice(0,7);render();show('overview')});
+$('budgetForm').addEventListener('submit',e=>{e.preventDefault();let v=Number($('budgetAmount').value);if(v<0)return;data.budgets[$('budgetCat').value]=v;save();$('budgetAmount').value='';render();show('overview')});
+$('month').onchange=render;
+function show(id){document.querySelectorAll('main section').forEach(s=>s.classList.toggle('hide',s.id!==id));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.target===id));if(id==='overview')render()}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.target));
+$('export').onclick=()=>{let blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='meu-dinheiro-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+$('importBtn').onclick=()=>$('importFile').click();
+$('importFile').onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let d=JSON.parse(r.result);if(!Array.isArray(d.transactions)||typeof d.budgets!=='object')throw Error();data=d;save();render();alert('Cópia importada com sucesso.')}catch(err){alert('Ficheiro inválido.')} };r.readAsText(f)};
+$('wipe').onclick=()=>{if(confirm('Apagar permanentemente todos os movimentos e orçamentos deste browser?')){data={transactions:[],budgets:{}};save();render()}};
+catsFill();render();
+})();
+</script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(console.error));}</script></body>
+</html>
