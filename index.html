@@ -18,6 +18,22 @@ button,select,input{font:inherit}button{border:0;background:#eef1f7;color:var(--
 nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:center;z-index:5}nav .navinner{max-width:1100px;width:100%;display:flex;justify-content:space-around}nav button{background:transparent;color:var(--muted);padding:13px 8px;border-radius:0;display:flex;flex-direction:column;gap:3px;align-items:center;font-size:12px}nav button.active{color:var(--green)}nav button span{font-size:20px}
 .overlay{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center;padding:16px;z-index:10}.overlay.show{display:flex}.modal{background:white;width:min(500px,100%);border-radius:24px;padding:22px;max-height:90vh;overflow:auto}.modal h2{margin:0 0 16px}.field{display:grid;gap:6px;margin:12px 0}.field label{font-size:14px;color:var(--muted)}.field input,.field select{border:1px solid var(--line);padding:12px;border-radius:12px;width:100%;background:white}.modalfooter{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}.hidden{display:none!important}.footerhint{text-align:center;color:var(--muted);font-size:13px;padding:20px}
 @media(max-width:700px){header{padding-top:14px}.grid{grid-template-columns:repeat(2,1fr);gap:11px}.wide{grid-column:span 2}.half,.third{grid-column:span 2}.stat{min-height:128px}.value{font-size:25px}.canvaswrap{height:230px}.card{padding:17px;border-radius:22px}.cardhead{font-size:16px}.txrow{grid-template-columns:1fr auto}.actions{grid-column:1/-1;justify-content:flex-end}.monthbar strong{font-size:17px}}
+
+/* Responsive correction for Android standalone/PWA viewport */
+html, body { width:100%; max-width:100%; overflow-x:hidden; }
+.wrap { width:100%; max-width:1100px; }
+.grid { min-width:0; }
+.card, .canvaswrap, .donutwrap { min-width:0; max-width:100%; }
+.canvaswrap canvas, .donutwrap canvas { display:block; width:100%; max-width:100%; }
+@media (pointer:coarse) and (max-width:1100px), (max-width:700px) {
+  header, .wrap { width:100%; max-width:100%; }
+  .grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .wide, .half, .third { grid-column:span 2; }
+  .canvaswrap { width:100%; height:240px; }
+  .donutwrap { width:100%; height:240px; margin:0 auto; }
+  .cardhead { flex-wrap:wrap; }
+}
+
 </style>
 </head>
 <body>
