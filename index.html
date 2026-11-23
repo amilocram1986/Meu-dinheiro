@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <meta name="theme-color" content="#101827">
+<link rel="manifest" href="./manifest.webmanifest">
 <title>Meu Dinheiro</title>
 <style>
 :root{--bg:#f3f5fa;--card:#fff;--ink:#172033;--muted:#788294;--green:#16866c;--red:#df5d70;--blue:#4777e6;--gold:#e1a34a;--line:#e8ecf2;--dark:#101827}
@@ -93,5 +94,11 @@ $('backupBtn').onclick=$('navBackup').onclick=()=>{let choice=confirm('OK = expo
 $('importFile').onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let d=JSON.parse(r.result);if(!d.tx||!Array.isArray(d.tx))throw Error();if(confirm('Importar este backup e substituir os dados atuais?')){data=d;save();alert('Backup importado.');}}catch(err){alert('Ficheiro de backup inválido.');}e.target.value='';};r.readAsText(f);};
 render();window.addEventListener('resize',()=>{drawBars();drawDonut();});
 })();
+</script>
+<script>
+// Registo do Service Worker com cache versionada e atualização controlada.
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(err => console.warn('SW:', err)));
+}
 </script>
 </body></html>
